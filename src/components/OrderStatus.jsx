@@ -1,129 +1,154 @@
 import { useState, useEffect } from 'react';
-import { coffees, milkTypes } from '../data/coffees';
+import { coffeeById, milkById, sugarLabel } from '../data/coffees';
 
-export default function OrderStatus({ order }) {
-  const [currentOrder, setCurrentOrder] = useState(order);
+const STEPS = ['pending', 'making', 'done'];
 
-  const coffee = coffees.find(c => c.id === currentOrder.coffee_type);
-  const milk = milkTypes.find(m => m.id === currentOrder.milk_type);
+const STEP_COPY = {
+  pending: {
+    title: 'Order received',
+    note: "It's in the queue - grab a seat, we'll call you over.",
+    dot: 'bg-amber-400',
+  },
+  making: {
+    title: 'Being made',
+    note: 'Your coffee is on the machine right now.',
+    dot: 'bg-sky-400',
+  },
+  done: {
+    title: 'Ready to collect',
+    note: 'Come and grab it - enjoy!',
+    dot: 'bg-emerald-500',
+  },
+};
 
-  // Poll for order updates
+export default function OrderStatus({ order, onPlaceAnother }) {
+  const [liveOrder, setLiveOrder] = useState(order);
+
+  // Follow the order while the page is open.
   useEffect(() => {
-    const pollInterval = setInterval(async () => {
+    let alive = true;
+    let timer;
+
+    const poll = async () => {
       try {
-        const response = await fetch('/api/orders');
-        if (response.ok) {
-          const orders = await response.json();
-          const updated = orders.find(o => o.id === currentOrder.id);
-          if (updated) {
-            setCurrentOrder(updated);
+        const res = await fetch(`/api/orders/${order.id}`);
+        if (res.ok) {
+          const updated = await res.json();
+          if (alive) {
+            setLiveOrder(updated);
+            if (updated.status === 'done') clearInterval(timer);
           }
         }
-      } catch (error) {
-        console.error('Failed to poll order status:', error);
+      } catch {
+        /* offline - keep showing the last known state */
       }
-    }, 3000);
+    };
 
-    return () => clearInterval(pollInterval);
-  }, [currentOrder.id]);
+    timer = setInterval(poll, 2500);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, [order.id]);
 
-  const statusConfig = {
-    pending: {
-      label: 'In the queue',
-      color: 'bg-amber-500',
-      icon: '⏳',
-      message: 'Your order is waiting'
-    },
-    making: {
-      label: 'Being made',
-      color: 'bg-blue-500',
-      icon: '👨‍🍳',
-      message: 'Your coffee is on its way!'
-    },
-    done: {
-      label: 'Ready!',
-      color: 'bg-emerald-500',
-      icon: '✅',
-      message: 'Come and get it!'
-    }
-  };
-
-  const status = statusConfig[currentOrder.status] || statusConfig.pending;
+  const coffee = coffeeById[liveOrder.coffee_type];
+  const milk = liveOrder.milk_type ? milkById[liveOrder.milk_type] : null;
+  const stepIndex = Math.max(0, STEPS.indexOf(liveOrder.status));
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 py-8 px-4">
-        <div className="max-w-lg mx-auto text-center">
-          <div className="text-4xl mb-3">{status.icon}</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
-            {status.label}
+    <div className="page animate-fade-up">
+      <div className="mx-auto max-w-md px-5 pt-10">
+        {/* Big illustration */}
+        <div className="relative mx-auto flex h-44 w-44 items-center justify-center">
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background:
+                'radial-gradient(circle at 50% 42%, rgba(255,255,255,0.95), rgba(255,255,255,0))',
+            }}
+          />
+          {coffee && (
+            <div className="relative w-40 animate-float-soft" dangerouslySetInnerHTML={{ __html: coffee.svg }} />
+          )}
+        </div>
+
+        <div className="mt-4 text-center">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-600">
+            Order in
+          </p>
+          <h1 className="mt-1.5 text-[26px] font-extrabold tracking-tight text-stone-900">
+            Thanks, {liveOrder.name.split(' ')[0]}!
           </h1>
-          <p className="text-gray-500 text-sm">
-            {status.message}
+
+          {/* Summary chips */}
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
+            {coffee && <span className="chip">{coffee.name}</span>}
+            {milk && <span className="chip">{milk.name} milk</span>}
+            <span className="chip">{sugarLabel(liveOrder.sugars || 0)}</span>
+          </div>
+          {liveOrder.notes && (
+            <p className="mt-2.5 text-[13px] italic text-stone-500">“{liveOrder.notes}”</p>
+          )}
+        </div>
+
+        {/* Live progress */}
+        <div className="mt-7 rounded-3xl bg-white p-5 ring-1 ring-stone-900/5 shadow-[0_1px_3px_rgba(28,25,23,0.06)]">
+          <div className="relative flex items-start">
+            {/* connector line */}
+            <div className="absolute left-[18px] right-[18px] top-[10px] h-0.5 -translate-y-1/2 bg-stone-100">
+              <div
+                className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                style={{ width: `${(stepIndex / (STEPS.length - 1)) * 100}%` }}
+              />
+            </div>
+
+            {STEPS.map((step, i) => {
+              const copy = STEP_COPY[step];
+              const reached = i <= stepIndex;
+              return (
+                <div key={step} className="relative z-10 flex flex-1 flex-col items-center text-center">
+                  <span
+                    className={`grid h-5 w-5 place-items-center rounded-full ring-4 ring-white transition-colors duration-300 ${
+                      i < stepIndex
+                        ? 'bg-emerald-500'
+                        : i === stepIndex
+                          ? `${copy.dot} ${i === 2 ? '' : 'animate-pulse-ring'}`
+                          : 'bg-stone-200'
+                    }`}
+                  >
+                    {i < stepIndex && (
+                      <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </span>
+                  <span
+                    className={`mt-2 text-[10.5px] font-bold uppercase tracking-wide ${
+                      reached ? 'text-stone-800' : 'text-stone-300'
+                    }`}
+                  >
+                    {copy.title}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="mt-4 text-center text-[13px] font-medium text-stone-500">
+            {STEP_COPY[liveOrder.status].note}
+          </p>
+          <p className="mt-1 text-center text-[11px] text-stone-300">
+            This page updates on its own.
           </p>
         </div>
-      </div>
 
-      <div className="max-w-lg mx-auto px-4 mt-6">
-        {/* Order Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-          <div className="flex items-start gap-4">
-            {/* Coffee illustration */}
-            <div 
-              className="w-16 h-16 flex-shrink-0"
-              dangerouslySetInnerHTML={{ __html: coffee?.svg || '' }}
-            />
-            
-            {/* Order details */}
-            <div className="flex-1">
-              <h2 className="font-bold text-gray-900 text-lg mb-1">
-                {coffee?.name}
-              </h2>
-              <p className="text-gray-600 text-sm">
-                {milk && <span>{milk.name} milk</span>}
-                {milk && currentOrder.sugars > 0 && <span> · </span>}
-                {currentOrder.sugars > 0 && (
-                  <span>{currentOrder.sugars} sugar{currentOrder.sugars > 1 ? 's' : ''}</span>
-                )}
-                {!milk && currentOrder.sugars === 0 && <span>Black</span>}
-              </p>
-              {currentOrder.notes && (
-                <p className="text-gray-400 text-sm italic mt-1">
-                  "{currentOrder.notes}"
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Status progress bar */}
-          <div className="mt-6 pt-4 border-t border-gray-100">
-            <div className="flex gap-1">
-              <div className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${
-                currentOrder.status === 'pending' || currentOrder.status === 'making' || currentOrder.status === 'done'
-                  ? 'bg-emerald-500' : 'bg-gray-100'
-              }`} />
-              <div className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${
-                currentOrder.status === 'making' || currentOrder.status === 'done'
-                  ? 'bg-emerald-500' : 'bg-gray-100'
-              }`} />
-              <div className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${
-                currentOrder.status === 'done'
-                  ? 'bg-emerald-500' : 'bg-gray-100'
-              }`} />
-            </div>
-            <div className="flex justify-between mt-2">
-              <span className="text-xs text-gray-400">Ordered</span>
-              <span className="text-xs text-gray-400">Making</span>
-              <span className="text-xs text-gray-400">Ready</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Order for */}
-        <div className="text-center text-sm text-gray-400">
-          Order for <span className="font-medium text-gray-600">{currentOrder.name}</span>
-        </div>
+        {/* Next action */}
+        <button type="button" onClick={onPlaceAnother} className="btn-ghost mx-auto mt-6 flex items-center gap-2">
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          Order another coffee
+        </button>
       </div>
     </div>
   );

@@ -6,156 +6,184 @@ import SugarCounter from './SugarCounter';
 import OrderStatus from './OrderStatus';
 
 export default function OrderPage() {
+  const [name, setName] = useState('');
   const [selectedCoffee, setSelectedCoffee] = useState(null);
   const [selectedMilk, setSelectedMilk] = useState(null);
   const [sugars, setSugars] = useState(0);
-  const [name, setName] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const [submittedOrder, setSubmittedOrder] = useState(null);
-  const [nameError, setNameError] = useState(false);
 
-  const selectedCoffeeData = coffees.find(c => c.id === selectedCoffee);
-  const showMilkSelector = selectedCoffeeData?.hasMilk;
+  const coffee = coffees.find((c) => c.id === selectedCoffee);
+  const needsMilk = Boolean(coffee?.hasMilk);
+  const canSubmit = name.trim().length > 0 && Boolean(coffee) && (!needsMilk || Boolean(selectedMilk));
+
+  const resetForm = () => {
+    setName('');
+    setSelectedCoffee(null);
+    setSelectedMilk(null);
+    setSugars(0);
+    setNotes('');
+    setSubmitError(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleSubmit = async () => {
-    if (!name.trim()) {
-      setNameError(true);
-      setTimeout(() => setNameError(false), 500);
-      return;
-    }
-
-    if (!selectedCoffee) return;
-
+    if (!canSubmit || isSubmitting) return;
     setIsSubmitting(true);
-    
+    setSubmitError(null);
+
     try {
-      const response = await fetch('/api/orders', {
+      const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
           coffee_type: selectedCoffee,
-          milk_type: selectedMilk,
+          milk_type: needsMilk ? selectedMilk : null,
           sugars,
-          notes: notes.trim() || null
-        })
+          notes: notes.trim() || null,
+        }),
       });
 
-      if (response.ok) {
-        const order = await response.json();
+      if (res.ok) {
+        const order = await res.json();
         setSubmittedOrder(order);
+      } else {
+        setSubmitError("That didn't go through - please try again.");
       }
-    } catch (error) {
-      console.error('Failed to submit order:', error);
+    } catch {
+      setSubmitError('No connection right now. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCoffeeSelect = (coffeeId) => {
-    setSelectedCoffee(coffeeId);
-    setSelectedMilk(null);
-  };
-
-  // Show order status if order was submitted
+  // ---- confirmation screen with live status ------------------------------
   if (submittedOrder) {
-    return <OrderStatus order={submittedOrder} />;
+    return <OrderStatus order={submittedOrder} onPlaceAnother={resetForm} />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-8">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 py-6 px-4">
-        <div className="max-w-lg mx-auto text-center">
-          <div className="text-3xl mb-2">☕</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
-            What'll it be?
+    <div className="page">
+      <div className="mx-auto max-w-md px-5">
+        {/* Hero */}
+        <header className="pb-2 pt-9">
+          <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Family coffee bar
+          </p>
+          <h1 className="mt-2 text-[28px] font-extrabold leading-tight tracking-tight text-stone-900">
+            What are you having?
           </h1>
-        </div>
-      </div>
+          <p className="mt-1.5 text-[14px] text-stone-500">
+            Pick your coffee and it goes straight to the machine.
+          </p>
+        </header>
 
-      <div className="max-w-lg mx-auto px-4 mt-6">
-        {/* Coffee Type Selection */}
-        <section className="mb-8">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            Coffee
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
-            {coffees.map((coffee) => (
+        {/* Name */}
+        <section className="mt-7">
+          <h2 className="field-label">Your name</h2>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="First name is plenty"
+            maxLength={30}
+            autoComplete="name"
+            className="input-field text-base font-medium"
+          />
+        </section>
+
+        {/* Coffee */}
+        <section className="mt-7">
+          <h2 className="field-label">Coffee</h2>
+          <div className="grid grid-cols-2 gap-2.5">
+            {coffees.map((item) => (
               <CoffeeCard
-                key={coffee.id}
-                coffee={coffee}
-                isSelected={selectedCoffee === coffee.id}
-                onClick={() => handleCoffeeSelect(coffee.id)}
+                key={item.id}
+                coffee={item}
+                isSelected={selectedCoffee === item.id}
+                onClick={() => {
+                  setSelectedCoffee(item.id);
+                  setSelectedMilk(null);
+                  setSubmitError(null);
+                }}
               />
             ))}
           </div>
         </section>
 
-        {/* Milk Selector */}
-        {showMilkSelector && (
-          <section className="mb-8 animate-fade-in">
+        {/* Milk */}
+        {needsMilk && (
+          <section className="mt-7">
             <MilkSelector
               milks={milkTypes}
               selected={selectedMilk}
-              onSelect={setSelectedMilk}
+              onSelect={(id) => {
+                setSelectedMilk(id);
+                setSubmitError(null);
+              }}
             />
+            {!selectedMilk && (
+              <p className="mt-2.5 text-[12.5px] font-medium text-amber-600">
+                Pick a milk for your {coffee.name.toLowerCase()} to continue.
+              </p>
+            )}
           </section>
         )}
 
-        {/* Sugar Counter */}
-        <section className="mb-6">
+        {/* Sugars */}
+        <section className="mt-7">
           <SugarCounter value={sugars} onChange={setSugars} />
         </section>
 
-        {/* Name Input */}
-        <section className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Your name
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="What's your name?"
-            className={`input-field ${nameError ? 'animate-shake border-red-400' : ''}`}
-            maxLength={30}
-          />
-        </section>
-
         {/* Notes */}
-        <section className="mb-8">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Notes <span className="text-gray-400 font-normal">(optional)</span>
-          </label>
+        <section className="mt-7">
+          <div className="flex items-baseline justify-between">
+            <h2 className="field-label mb-3">Anything else?</h2>
+            <span className="mb-3 text-xs text-stone-300">optional</span>
+          </div>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Extra hot? No foam?"
-            className="input-field resize-none h-20"
-            maxLength={100}
+            placeholder="Extra hot · no foam · weak shot …"
+            rows={2}
+            maxLength={120}
+            className="input-field resize-none"
           />
         </section>
 
-        {/* Submit Button */}
-        <button
-          onClick={handleSubmit}
-          disabled={!selectedCoffee || isSubmitting}
-          className="btn-primary w-full text-lg"
-        >
-          {isSubmitting ? (
-            <span className="flex items-center justify-center gap-2">
-              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-              </svg>
-              Ordering...
-            </span>
-          ) : (
-            'Place Order'
+        {/* Submit */}
+        <div className="mt-8">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!canSubmit || isSubmitting}
+            className="btn-primary"
+          >
+            {isSubmitting ? (
+              <span className="flex items-center justify-center gap-2.5">
+                <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
+                </svg>
+                Placing your order…
+              </span>
+            ) : (
+              'Place order'
+            )}
+          </button>
+
+          {submitError && (
+            <p className="mt-3 text-center text-[13px] font-medium text-red-600">{submitError}</p>
           )}
-        </button>
+        </div>
+
+        <p className="mt-6 text-center text-[12px] leading-relaxed text-stone-400">
+          Your order goes straight to the coffee machine queue.
+        </p>
       </div>
     </div>
   );

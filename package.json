@@ -1,14 +1,23 @@
 {
-  "name": "coffee-app",
-  "version": "1.0.0",
+  "name": "coffee-orders",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "pages:dev": "wrangler pages dev dist --port 8788",
     "deploy": "wrangler pages deploy dist",
-    "db:init": "wrangler d1 execute coffee-orders --file=./migrations/0001_init.sql"
+    "db:create": "wrangler d1 create coffee-orders",
+    "db:migrate": "wrangler d1 migrations apply coffee-orders",
+    "db:migrate:local": "wrangler d1 migrations apply coffee-orders --local",
+    "db:migrate:remote": "wrangler d1 migrations apply coffee-orders --remote"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
@@ -16,10 +25,8 @@
     "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.32",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "tailwindcss": "^3.4.0",
     "vite": "^5.0.0",
-    "wrangler": "^3.0.0"
+    "wrangler": "^3.114.17"
   }
 }

@@ -1,26 +1,33 @@
 export default function CoffeeCard({ coffee, isSelected, onClick }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`${
-        isSelected ? 'card-selected' : 'card-interactive'
-      } flex flex-col items-center text-center p-4 min-h-[160px]`}
+      aria-pressed={isSelected}
+      className={isSelected ? 'coffee-card-selected' : 'coffee-card'}
     >
-      {/* Coffee Illustration */}
-      <div 
-        className="w-20 h-20 mb-3 flex-shrink-0"
-        dangerouslySetInnerHTML={{ __html: coffee.svg }}
-      />
-      
-      {/* Coffee Name */}
-      <h3 className="font-semibold text-gray-900 text-sm leading-tight">
+      {/* Selected marker */}
+      <span
+        className={`absolute top-2.5 right-2.5 grid h-5 w-5 place-items-center rounded-full transition-all duration-150 ${
+          isSelected
+            ? 'bg-emerald-500 text-white scale-100 opacity-100'
+            : 'scale-50 opacity-0'
+        }`}
+      >
+        <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M5 13l4 4L19 7" />
+        </svg>
+      </span>
+
+      {/* Illustration */}
+      <span className="flex w-full items-end justify-center pt-1">
+        <span className="w-[104px] max-w-full" dangerouslySetInnerHTML={{ __html: coffee.svg }} />
+      </span>
+
+      {/* Name */}
+      <span className="w-full text-center text-[15px] font-semibold leading-tight text-stone-800">
         {coffee.name}
-      </h3>
-      
-      {/* Selected indicator */}
-      {isSelected && (
-        <div className="mt-2 w-1.5 h-1.5 rounded-full bg-emerald-500" />
-      )}
+      </span>
     </button>
   );
 }

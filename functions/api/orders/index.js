@@ -1,78 +1,67 @@
-// GET /api/orders - List all orders
-export async function onRequestGet(context) {
-  const { env } = context;
-  
-  try {
-    const { results } = await env.DB.prepare(
-      'SELECT * FROM orders ORDER BY created_at DESC'
-    ).all();
-    
-    return Response.json(results, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  } catch (error) {
-    return Response.json(
-      { error: 'Failed to fetch orders' },
-      { status: 500 }
-    );
-  }
+// GET /api/orders  - list every order, oldest first (barista works top-down)
+// POST /api/orders - create an order
+
+const COFFEE_TYPES = new Set([
+  'espresso',
+  'macchiato',
+  'piccolo',
+  'long-black',
+  'flat-white',
+  'cafe-latte',
+  'cappuccino',
+]);
+
+const MILK_TYPES = new Set(['full-cream', 'skim', 'oat']);
+const MILK_REQUIRED_FOR = new Set(['macchiato', 'piccolo', 'flat-white', 'cafe-latte', 'cappuccino']);
+const MAX_NAME = 30;
+const MAX_NOTES = 120;
+
+export async function onRequestGet({ env }) {
+  const { results } = await env.DB.prepare(
+    'SELECT * FROM orders ORDER BY created_at ASC, rowid ASC'
+  ).all();
+  return Response.json(results);
 }
 
-// POST /api/orders - Create new order
-export async function onRequestPost(context) {
-  const { env, request } = context;
-  
+export async function onRequestPost({ env, request }) {
+  let body;
   try {
-    const body = await request.json();
-    const { name, coffee_type, milk_type, sugars, notes } = body;
-    
-    // Validation
-    if (!name || !coffee_type) {
-      return Response.json(
-        { error: 'Name and coffee type are required' },
-        { status: 400 }
-      );
-    }
-    
-    // Generate UUID
-    const id = crypto.randomUUID();
-    
-    // Insert order
-    await env.DB.prepare(
-      'INSERT INTO orders (id, name, coffee_type, milk_type, sugars, notes) VALUES (?, ?, ?, ?, ?, ?)'
-    ).bind(id, name, coffee_type, milk_type || null, sugars || 0, notes || null)
-      .run();
-    
-    // Fetch the created order
-    const { results } = await env.DB.prepare(
-      'SELECT * FROM orders WHERE id = ?'
-    ).bind(id).all();
-    
-    return Response.json(results[0], {
-      status: 201,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  } catch (error) {
-    return Response.json(
-      { error: 'Failed to create order' },
-      { status: 500 }
-    );
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'Invalid JSON body.' }, { status: 400 });
   }
-}
 
-// Handle OPTIONS for CORS
-export async function onRequestOptions() {
-  return new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    }
-  });
+  const name = typeof body.name === 'string' ? body.name.trim() : '';
+  const coffeeType = body.coffee_type;
+  const milkType = body.milk_type ?? null;
+  const sugars = Number.isInteger(body.sugars) ? body.sugars : 0;
+  const notes = typeof body.notes === 'string' ? body.notes.trim() : '';
+
+  if (!name) return Response.json({ error: 'A name is required.' }, { status: 400 });
+  if (name.length > MAX_NAME)
+    return Response.json({ error: `Name must be ${MAX_NAME} characters or fewer.` }, { status: 400 });
+  if (!COFFEE_TYPES.has(coffeeType))
+    return Response.json({ error: 'Unknown coffee type.' }, { status: 400 });
+  if (MILK_REQUIRED_FOR.has(coffeeType) && !MILK_TYPES.has(milkType))
+    return Response.json({ error: 'A milk choice is required for this coffee.' }, { status: 400 });
+  if (milkType && !MILK_TYPES.has(milkType))
+    return Response.json({ error: 'Unknown milk type.' }, { status: 400 });
+  if (sugars < 0 || sugars > 5)
+    return Response.json({ error: 'Sugars must be between 0 and 5.' }, { status: 400 });
+  if (notes.length > MAX_NOTES)
+    return Response.json({ error: 'Notes are too long.' }, { status: 400 });
+
+  const id = crypto.randomUUID();
+
+  await env.DB.prepare(
+    'INSERT INTO orders (id, name, coffee_type, milk_type, sugars, notes) VALUES (?, ?, ?, ?, ?, ?)'
+  )
+    .bind(id, name, coffeeType, milkType, sugars, notes || null)
+    .run();
+
+  const { results } = await env.DB.prepare('SELECT * FROM orders WHERE id = ?')
+    .bind(id)
+    .all();
+
+  return Response.json(results[0], { status: 201 });
 }
