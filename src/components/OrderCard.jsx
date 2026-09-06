@@ -1,4 +1,4 @@
-import { coffeeById, milkById, sugarLabel } from '../data/coffees';
+import { drinkById, milkById, sugarLabel } from '../data/coffees';
 
 const PILL = {
   pending: 'pill-pending',
@@ -7,7 +7,7 @@ const PILL = {
 };
 
 export default function OrderCard({ order, onStatusChange, index }) {
-  const coffee = coffeeById[order.coffee_type];
+  const drink = drinkById[order.coffee_type];
   const milk = order.milk_type ? milkById[order.milk_type] : null;
   const done = order.status === 'done';
 
@@ -28,8 +28,8 @@ export default function OrderCard({ order, onStatusChange, index }) {
       <div className="flex items-center gap-3">
         {/* Artwork */}
         <div className="grid h-16 w-16 flex-shrink-0 place-items-center rounded-2xl bg-stone-50 ring-1 ring-stone-900/5">
-          {coffee && (
-            <div className="w-[52px]" dangerouslySetInnerHTML={{ __html: coffee.svg }} />
+          {drink && (
+            <div className="w-[52px]" dangerouslySetInnerHTML={{ __html: drink.svg }} />
           )}
         </div>
 
@@ -44,9 +44,11 @@ export default function OrderCard({ order, onStatusChange, index }) {
             )}
           </div>
           <p className="mt-0.5 truncate text-[13px] font-medium text-stone-600">
-            {coffee?.name}
+            {drink?.name}
             {milk && <span className="text-stone-400"> · {milk.name}</span>}
-            <span className="text-stone-400"> · {sugarLabel(order.sugars || 0)}</span>
+            {drink?.hasSugar !== false && (
+              <span className="text-stone-400"> · {sugarLabel(order.sugars || 0)}</span>
+            )}
           </p>
           {order.notes && (
             <p className="mt-0.5 truncate text-[12px] italic text-stone-400">“{order.notes}”</p>

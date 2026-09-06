@@ -145,7 +145,7 @@ function glassSmallLayers({ milkToBrim }) {
   // Small glass tumbler shared by macchiato + piccolo.
   const c = { topY: 74, botY: 150, topHW: 40, botHW: 35 };
   const s = milkToBrim ? 78 : 84; // liquid surface
-  const body = milkToBrim ? glassBody(c) : glassBody(c);
+  const body = glassBody(c);
   let content = '';
   if (milkToBrim) {
     // Piccolo: ristretto at the base, milk right up to the brim.
@@ -165,11 +165,12 @@ ${surface(c, s + 4, 0.62, P.foam, { y2: s + 16 })}
 ${surface(c, s + 6, 0.4, P.foam, { y2: s + 13 })}
 <ellipse cx="100" cy="${s + 2}" rx="${iw(s, c) * 0.62}" ry="5" fill="${P.foam}" opacity="0.55"/>`;
   }
+  // Glass body first, liquid on top, shine last - so the layers stay visible.
   return wrap(`
 ${saucer(56)}
+${body}
 ${content}
-${glassShine(c, s - 2, 147)}
-${body}`);
+${glassShine(c, s - 2, 147)}`);
 }
 
 function macchiatoArt() {
@@ -184,8 +185,10 @@ function longBlackArt() {
   // Tall glass, mostly hot water with the espresso resting on top.
   const c = { topY: 62, botY: 152, topHW: 40, botHW: 33 };
   const s = 66;
+  // Glass body first so the floating espresso + water layers stay visible.
   return wrap(`
 ${saucer(58)}
+${glassBody(c)}
 ${layer(c, s, 148, P.water, { rx: 10 })}
 ${layer(c, s + 26, 150, P.waterDeep, { rx: 10 })}
 ${layer(c, s, 100, P.esp, { inset: 1.5 })}
@@ -193,7 +196,6 @@ ${layer(c, s, s + 6, P.cremaLight, { inset: 2 })}
 ${layer(c, s + 6, s + 10, P.crema, { inset: 2 })}
 <path d="M ${100 - iw(103, c) + 8} 101 q 10 -3 18 0 q 9 3 16 0" stroke="${P.espSoft}" stroke-width="2.5" fill="none" opacity="0.7" stroke-linecap="round"/>
 ${glassShine(c, s, 149)}
-${glassBody(c)}
 ${steam(c, 60)}`);
 }
 
@@ -336,3 +338,115 @@ export const statusLabel = {
   making: 'Making',
   done: 'Done',
 };
+
+// ------------------------------------------------------------------ teas ----
+// Classic flared teacup on a saucer - shared geometry for all teas.
+const T = {
+  amber: '#A9632F',
+  amberDeep: '#86451F',
+  mint: '#A9CDA4',
+  mintDeep: '#8FB88A',
+  mintLeaf: '#4E8C54',
+  mintLeafDark: '#3D7043',
+  gold: '#E7D98C',
+  goldDeep: '#D3BE63',
+  green: '#C0CF96',
+  greenDeep: '#A6B87A',
+  lemon: '#F2C14E',
+  lemonPeel: '#F7D98A',
+  lemonLine: '#E0A93A',
+  lemongrass: '#B8C96A',
+  lemongrassDark: '#9BAE4E',
+  ginger: '#D9A65E',
+  gingerDark: '#B98745',
+};
+
+const teaCup = { topY: 86, botY: 152, topHW: 46, botHW: 32 };
+
+// Tea liquid: main fill, a deeper band at the bottom, and a pale surface sheen.
+function teaFill(s, fill, deep) {
+  const c = teaCup;
+  return `
+${layer(c, s, 148, fill, { rx: 10 })}
+${layer(c, s + 24, 148, deep, { rx: 10 })}
+${layer(c, s, s + 3, '#FFFFFF', { inset: 1.2, opacity: 0.3 })}`;
+}
+
+function teaBase(contents, overlay = '') {
+  return wrap(`
+${saucer(62)}
+${handle(teaCup, { y1: 96, y2: 128, rx: 8, thick: 6 })}
+${ceramicBody(teaCup)}
+${contents}
+${overlay}
+${steam(teaCup, 84)}`);
+}
+
+function blackTeaArt() {
+  // Strong amber brew, with a teabag tag hanging off the rim.
+  const s = 90;
+  const tag = `
+<path d="M ${100 + teaCup.topHW * 0.45} ${teaCup.topY + 2} q 6 12 2 26" stroke="#D8CFBF" stroke-width="1.8" fill="none"/>
+<rect x="${100 + teaCup.topHW * 0.45 + 5}" y="${teaCup.topY + 26}" width="17" height="12" rx="3" fill="#FFFFFF" stroke="#E2D9C9" stroke-width="1.5"/>
+<circle cx="${100 + teaCup.topHW * 0.45 + 13.5}" cy="${teaCup.topY + 32}" r="2" fill="#C08A55"/>`;
+  return teaBase(teaFill(s, T.amber, T.amberDeep), tag);
+}
+
+function peppermintArt() {
+  // Pale green infusion with a couple of mint leaves on the surface.
+  const s = 90;
+  const leaves = `
+<g transform="rotate(-12 100 94)">
+  <path d="M 100 92 q 9 -4 15 3 q 3 7 -4 11 q -9 4 -15 -3 q -3 -7 4 -11 Z" fill="${T.mintLeaf}"/>
+  <path d="M 100 92 L 100 104" stroke="#FFFFFF" stroke-width="1.1" opacity="0.55"/>
+</g>
+<g transform="rotate(14 96 97)">
+  <path d="M 96 95 q -8 -3 -13 3 q -3 6 3 9 q 8 3 13 -3 q 3 -6 -3 -9 Z" fill="${T.mintLeafDark}"/>
+  <path d="M 96 95 L 96 106" stroke="#FFFFFF" stroke-width="1" opacity="0.4"/>
+</g>`;
+  return teaBase(teaFill(s, T.mint, T.mintDeep), leaves);
+}
+
+function lemongrassGingerArt() {
+  // Golden infusion, lemongrass stalk leaning out, ginger coin on the saucer.
+  const s = 92;
+  const extras = `
+<path d="M 88 98 C 78 80, 75 64, 79 46 C 80 41, 84 40, 86 45 C 85 62, 87 74, 94 94 Z" fill="${T.lemongrass}"/>
+<path d="M 84 94 C 79 78, 78 62, 81 48" stroke="${T.lemongrassDark}" stroke-width="1.6" fill="none"/>
+<ellipse cx="113" cy="167" rx="10" ry="4.5" fill="${T.ginger}"/>
+<ellipse cx="113" cy="167" rx="6.5" ry="2.6" fill="${T.gingerDark}" opacity="0.55"/>
+<circle cx="113" cy="166" r="1.4" fill="#FFFFFF" opacity="0.5"/>`;
+  return teaBase(teaFill(s, T.gold, T.goldDeep), extras);
+}
+
+function greenLemonArt() {
+  // Pale green-yellow brew with a lemon slice resting on the rim.
+  const s = 90;
+  const lemon = `
+<g transform="translate(140 88) rotate(20)">
+  <circle r="11" fill="${T.lemonPeel}"/>
+  <circle r="8.5" fill="${T.lemon}"/>
+  <path d="M -8.5 0 L 8.5 0 M 0 -8.5 L 0 8.5 M -6 -6 L 6 6 M -6 6 L 6 -6" stroke="${T.lemonLine}" stroke-width="1.2"/>
+  <circle r="1.6" fill="#FFFFFF" opacity="0.8"/>
+</g>`;
+  return teaBase(teaFill(s, T.green, T.greenDeep), lemon);
+}
+
+export const teas = [
+  {
+    id: 'black',
+    name: 'Black Tea',
+    hasMilk: true,
+    milkOptional: true, // milk is a choice, not a requirement
+    hasSugar: true,
+    svg: blackTeaArt(),
+  },
+  { id: 'peppermint', name: 'Peppermint', hasMilk: false, hasSugar: false, svg: peppermintArt() },
+  { id: 'lemongrass-ginger', name: 'Lemongrass & Ginger', hasMilk: false, hasSugar: false, svg: lemongrassGingerArt() },
+  { id: 'green-lemon', name: 'Green Tea & Lemon', hasMilk: false, hasSugar: false, svg: greenLemonArt() },
+];
+
+export const teaById = Object.fromEntries(teas.map((t) => [t.id, t]));
+
+// Combined lookup so a single id resolves either a coffee or a tea.
+export const drinkById = { ...coffeeById, ...teaById };

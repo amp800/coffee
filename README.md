@@ -1,9 +1,10 @@
-# ☕ Family Coffee Bar
+# ☕ Family Coffee & Tea Bar
 
-A tiny, beautiful coffee-ordering app for family gatherings. Guests (or one
-person walking around the table) place orders from their phone, and they show
-up on the barista screen in the order they arrive — no apps, no accounts, no
-sign-ups, no cost.
+A tiny, beautiful coffee-and-tea-ordering app for family gatherings. Guests
+(or one person walking around the table) place orders from their phone, and
+they show up on the right maker's screen in the order they arrive — coffee on
+the barista screen, tea on the tea lady's — no apps, no accounts, no sign-ups,
+no cost.
 
 Built for the free tier of **Cloudflare Pages + Workers (Pages Functions) +
 D1**. There is no server to run, nothing to self-host, and the free limits are
@@ -11,17 +12,18 @@ so far above what a few family coffee sessions use that you will never pay.
 
 ---
 
-## The three pages
+## The four pages
 
 | Page          | URL          | Who uses it                                                        |
 | ------------- | ------------ | ------------------------------------------------------------------ |
-| **Order page** | `/`          | Guests. Pick a coffee → live confirmation that follows the order.  |
+| **Order page** | `/`          | Guests. Pick a coffee **or a tea** → live confirmation that follows the order. |
 | **Waiter mode** | `/waiter`   | You or your daughter walking around taking orders for other people. Name first, rapid entry, auto-resets after each order. |
-| **Barista mode** | `/barista` | You at the machine. Orders appear in real time; tap through pending → making → done. |
+| **Barista mode** | `/barista` | You at the machine. **Coffee** orders only; tap through pending → making → done. |
+| **Tea lady mode** | `/tealady` | The tea maker. **Tea** orders only, same flow — because tea is made in a different part of the kitchen by a different person. |
 
-The barista and waiter pages are not linked anywhere on the order page — they
-are just URLs you know about (`/barista`, `/waiter`). For a family lunch that
-is all the "security" you need.
+The barista, tea lady and waiter pages are not linked anywhere on the order
+page — they are just URLs you know about (`/barista`, `/tealady`, `/waiter`).
+For a family lunch that is all the "security" you need.
 
 ---
 
@@ -92,8 +94,9 @@ with the real id from step 3 (keep the quotes).
 npm run db:migrate:remote
 ```
 
-This applies `migrations/0001_init.sql` to your D1 database. You only do this
-once — the table stays there forever.
+This applies every migration in `migrations/` (`0001_init.sql` creates the
+orders table, `0002_add_category.sql` adds the coffee/tea routing column) to
+your D1 database. You only do this once — the schema stays there forever.
 
 ### 6. Build and deploy
 
@@ -112,9 +115,12 @@ Open the URL from step 6. You should see the order page. Then check:
 
 - `https://<your-project>.pages.dev/waiter`
 - `https://<your-project>.pages.dev/barista`
+- `https://<your-project>.pages.dev/tealady`
 
-Put a test order through on `/` (or `/waiter`) and it should appear on
-`/barista` within a couple of seconds.
+Put a test coffee through on `/` (or `/waiter`) and it should appear on
+`/barista` within a couple of seconds; order a tea and it appears on
+`/tealady` instead. **Clear all** on one page only clears that maker's list,
+so the two never wipe each other.
 
 ### Redeploying after changes
 
@@ -167,12 +173,14 @@ page with no app to install.
    time's orders are still there, tap **Clear all**.
 2. Guests either scan the QR code and order their own, or someone takes the
    phone around the table in **waiter mode** (`/waiter`) — name first, tap the
-   coffee, pick milk, set sugars, place. It resets itself in three seconds,
-   ready for the next person.
-3. Orders arrive on `/barista` oldest-first. **Start making** when you begin a
-   drink, **Mark done** when it's on the bench. Done orders stay listed (dimmed)
-   so nobody's coffee gets forgotten.
-4. After lunch, **Clear all** leaves the app fresh for next time.
+   drink, pick milk/sugars where offered, place. It resets itself in three
+   seconds, ready for the next person. Teas sit under their own heading on
+   the same page.
+3. Coffee orders arrive on `/barista`, tea orders on `/tealady`, both
+   oldest-first. **Start making** when you begin a drink, **Mark done** when
+   it's on the bench. Done orders stay listed (dimmed) so nobody's drink gets
+   forgotten.
+4. After lunch, **Clear all** on each page leaves the app fresh for next time.
 
 ### Local development
 
@@ -191,10 +199,11 @@ The first time you run `pages:dev`, apply the migration locally too:
 
 ```
 functions/api/orders/    Pages Functions = the API (list, create, status, clear)
-migrations/0001_init.sql D1 schema (orders table)
-src/                     React app (order page, waiter, barista)
+migrations/              D1 schema (0001 orders table, 0002 coffee/tea category)
+src/                     React app (order page, waiter, barista, tea lady)
+  components/MakerPage.jsx  Shared dashboard behind /barista and /tealady
   data/coffees.js        Drink + milk definitions with their SVG illustrations
-public/_redirects        SPA fallback so /waiter and /barista deep links work
+public/_redirects        SPA fallback so /waiter, /barista and /tealady deep links work
 wrangler.toml            Cloudflare config (D1 binding)
 ```
 
@@ -202,6 +211,9 @@ wrangler.toml            Cloudflare config (D1 binding)
 
 - **Drinks & milk** — `src/data/coffees.js`. Each drink is a definition plus an
   SVG illustration; add one or remove one there and the whole app follows.
+  `hasMilk` shows the milk picker, `milkOptional: true` makes it a choice
+  (black tea) instead of a requirement, and `hasSugar: false` hides the sugar
+  counter (herbal teas).
 - **Sugar limit / reset timing** — `SugarCounter.jsx` (`MAX_SUGARS`) and
   `WaiterPage.jsx` (`RESET_AFTER_MS`).
 - **Look & feel** — colours and component styles live in `src/index.css`.
@@ -211,6 +223,7 @@ wrangler.toml            Cloudflare config (D1 binding)
 | Symptom | Fix |
 | ------- | --- |
 | Ordering fails on `pages.dev` | You skipped step 5 — run `npm run db:migrate:remote`. |
+| Teas don't route to `/tealady` | The `category` column is missing — re-run `npm run db:migrate:remote` (migration 0002). |
 | `/barista` gives a 404 on reload | `public/_redirects` handles this; redeploy after any change to it. |
 | Orders appear in the wrong order | The list is oldest-first by design (first ordered = first made). |
 | Someone's coffee is wrong | On the barista card, tap the small ↺ button to step it back a status. |

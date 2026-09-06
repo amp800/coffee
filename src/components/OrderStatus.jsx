@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { coffeeById, milkById, sugarLabel } from '../data/coffees';
+import { drinkById, milkById, sugarLabel } from '../data/coffees';
 
 const STEPS = ['pending', 'making', 'done'];
 
@@ -11,7 +11,7 @@ const STEP_COPY = {
   },
   making: {
     title: 'Being made',
-    note: 'Your coffee is on the machine right now.',
+    note: "It's being made right now - won't be long.",
     dot: 'bg-sky-400',
   },
   done: {
@@ -51,7 +51,7 @@ export default function OrderStatus({ order, onPlaceAnother }) {
     };
   }, [order.id]);
 
-  const coffee = coffeeById[liveOrder.coffee_type];
+  const drink = drinkById[liveOrder.coffee_type];
   const milk = liveOrder.milk_type ? milkById[liveOrder.milk_type] : null;
   const stepIndex = Math.max(0, STEPS.indexOf(liveOrder.status));
 
@@ -67,8 +67,8 @@ export default function OrderStatus({ order, onPlaceAnother }) {
                 'radial-gradient(circle at 50% 42%, rgba(255,255,255,0.95), rgba(255,255,255,0))',
             }}
           />
-          {coffee && (
-            <div className="relative w-40 animate-float-soft" dangerouslySetInnerHTML={{ __html: coffee.svg }} />
+          {drink && (
+            <div className="relative w-40 animate-float-soft" dangerouslySetInnerHTML={{ __html: drink.svg }} />
           )}
         </div>
 
@@ -82,9 +82,11 @@ export default function OrderStatus({ order, onPlaceAnother }) {
 
           {/* Summary chips */}
           <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
-            {coffee && <span className="chip">{coffee.name}</span>}
+            {drink && <span className="chip">{drink.name}</span>}
             {milk && <span className="chip">{milk.name} milk</span>}
-            <span className="chip">{sugarLabel(liveOrder.sugars || 0)}</span>
+            {drink?.hasSugar !== false && (
+              <span className="chip">{sugarLabel(liveOrder.sugars || 0)}</span>
+            )}
           </div>
           {liveOrder.notes && (
             <p className="mt-2.5 text-[13px] italic text-stone-500">“{liveOrder.notes}”</p>
@@ -147,7 +149,7 @@ export default function OrderStatus({ order, onPlaceAnother }) {
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 5v14M5 12h14" />
           </svg>
-          Order another coffee
+          Order another drink
         </button>
       </div>
     </div>

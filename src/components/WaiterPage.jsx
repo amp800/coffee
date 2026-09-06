@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { coffees, milkTypes, coffeeById, milkById, sugarLabel } from '../data/coffees';
+import { coffees, teas, milkTypes, drinkById, milkById, sugarLabel } from '../data/coffees';
 import CoffeeCard from './CoffeeCard';
 import MilkSelector from './MilkSelector';
 import SugarCounter from './SugarCounter';
@@ -8,7 +8,7 @@ const RESET_AFTER_MS = 3000;
 
 export default function WaiterPage() {
   const [name, setName] = useState('');
-  const [selectedCoffee, setSelectedCoffee] = useState(null);
+  const [selection, setSelection] = useState(null); // { category: 'coffee' | 'tea', id }
   const [selectedMilk, setSelectedMilk] = useState(null);
   const [sugars, setSugars] = useState(0);
   const [notes, setNotes] = useState('');
@@ -19,9 +19,14 @@ export default function WaiterPage() {
 
   const nameRef = useRef(null);
 
-  const coffee = coffees.find((c) => c.id === selectedCoffee);
-  const needsMilk = Boolean(coffee?.hasMilk);
-  const canSubmit = name.trim().length > 0 && Boolean(coffee) && (!needsMilk || Boolean(selectedMilk));
+  const drink = selection ? drinkById[selection.id] : null;
+  const needsMilk = Boolean(drink?.hasMilk);
+  const milkOptional = drink?.milkOptional === true;
+  const showSugar = drink?.hasSugar !== false;
+  const canSubmit =
+    name.trim().length > 0 &&
+    Boolean(drink) &&
+    (!needsMilk || milkOptional || Boolean(selectedMilk));
 
   const focusName = useCallback(() => {
     // Small delay lets the success screen unmount first.
@@ -30,7 +35,7 @@ export default function WaiterPage() {
 
   const resetForm = useCallback(() => {
     setName('');
-    setSelectedCoffee(null);
+    setSelection(null);
     setSelectedMilk(null);
     setSugars(0);
     setNotes('');
@@ -38,6 +43,14 @@ export default function WaiterPage() {
     window.scrollTo({ top: 0 });
     focusName();
   }, [focusName]);
+
+  const selectDrink = (category, id) => {
+    const next = drinkById[id];
+    setSelection({ category, id });
+    setSelectedMilk(null);
+    if (next && next.hasSugar === false) setSugars(0);
+    setSubmitError(null);
+  };
 
   // Auto reset after a successful order.
   useEffect(() => {
@@ -70,9 +83,10 @@ export default function WaiterPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
-          coffee_type: selectedCoffee,
+          category: selection.category,
+          coffee_type: selection.id,
           milk_type: needsMilk ? selectedMilk : null,
-          sugars,
+          sugars: showSugar ? sugars : 0,
           notes: notes.trim() || null,
         }),
       });
@@ -92,7 +106,7 @@ export default function WaiterPage() {
 
   // ---- success screen -------------------------------------------------------
   if (placed) {
-    const placedCoffee = coffeeById[placed.coffee_type];
+    const placedDrink = drinkById[placed.coffee_type];
     const placedMilk = placed.milk_type ? milkById[placed.milk_type] : null;
     return (
       <div className="page grid place-items-center">
@@ -108,15 +122,17 @@ export default function WaiterPage() {
           </h1>
 
           <div className="mx-auto mt-5 max-w-[260px] rounded-3xl bg-white px-5 py-4 ring-1 ring-stone-900/5 shadow-[0_1px_3px_rgba(28,25,23,0.06)]">
-            {placedCoffee && (
-              <div className="mx-auto w-24" dangerouslySetInnerHTML={{ __html: placedCoffee.svg }} />
+            {placedDrink && (
+              <div className="mx-auto w-24" dangerouslySetInnerHTML={{ __html: placedDrink.svg }} />
             )}
             <p className="mt-1 text-[15px] font-bold text-stone-900">
-              {placedCoffee?.name}
+              {placedDrink?.name}
             </p>
             <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1.5">
               {placedMilk && <span className="chip">{placedMilk.name}</span>}
-              <span className="chip">{sugarLabel(placed.sugars || 0)}</span>
+              {placedDrink?.hasSugar !== false && (
+                <span className="chip">{sugarLabel(placed.sugars || 0)}</span>
+              )}
             </div>
             {placed.notes && (
               <p className="mt-2 text-[12px] italic text-stone-500">“{placed.notes}”</p>
@@ -189,12 +205,23 @@ export default function WaiterPage() {
               <CoffeeCard
                 key={item.id}
                 coffee={item}
-                isSelected={selectedCoffee === item.id}
-                onClick={() => {
-                  setSelectedCoffee(item.id);
-                  setSelectedMilk(null);
-                  setSubmitError(null);
-                }}
+                isSelected={selection?.category === 'coffee' && selection?.id === item.id}
+                onClick={() => selectDrink('coffee', item.id)}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Tea */}
+        <section className="mt-8 border-t border-stone-900/5 pt-7">
+          <h2 className="field-label mb-3">Tea</h2>
+          <div className="grid grid-cols-2 gap-2.5">
+            {teas.map((item) => (
+              <CoffeeCard
+                key={item.id}
+                coffee={item}
+                isSelected={selection?.category === 'tea' && selection?.id === item.id}
+                onClick={() => selectDrink('tea', item.id)}
               />
             ))}
           </div>
@@ -215,9 +242,11 @@ export default function WaiterPage() {
         )}
 
         {/* Sugars + notes in a row-friendly pair */}
-        <section className="mt-7">
-          <SugarCounter value={sugars} onChange={setSugars} />
-        </section>
+        {showSugar && (
+          <section className="mt-7">
+            <SugarCounter value={sugars} onChange={setSugars} />
+          </section>
+        )}
 
         <section className="mt-7">
           <div className="flex items-baseline justify-between">
@@ -245,8 +274,8 @@ export default function WaiterPage() {
                 </svg>
                 Sending…
               </span>
-            ) : name.trim() && !coffee ? (
-              'Pick a coffee'
+            ) : name.trim() && !drink ? (
+              'Pick a drink'
             ) : (
               `Log ${name.trim().split(' ')[0] || 'this'} order`
             )}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { coffees, milkTypes } from '../data/coffees';
+import { coffees, teas, milkTypes, drinkById } from '../data/coffees';
 import CoffeeCard from './CoffeeCard';
 import MilkSelector from './MilkSelector';
 import SugarCounter from './SugarCounter';
@@ -7,7 +7,7 @@ import OrderStatus from './OrderStatus';
 
 export default function OrderPage() {
   const [name, setName] = useState('');
-  const [selectedCoffee, setSelectedCoffee] = useState(null);
+  const [selection, setSelection] = useState(null); // { category: 'coffee' | 'tea', id }
   const [selectedMilk, setSelectedMilk] = useState(null);
   const [sugars, setSugars] = useState(0);
   const [notes, setNotes] = useState('');
@@ -15,13 +15,26 @@ export default function OrderPage() {
   const [submitError, setSubmitError] = useState(null);
   const [submittedOrder, setSubmittedOrder] = useState(null);
 
-  const coffee = coffees.find((c) => c.id === selectedCoffee);
-  const needsMilk = Boolean(coffee?.hasMilk);
-  const canSubmit = name.trim().length > 0 && Boolean(coffee) && (!needsMilk || Boolean(selectedMilk));
+  const drink = selection ? drinkById[selection.id] : null;
+  const needsMilk = Boolean(drink?.hasMilk);
+  const milkOptional = drink?.milkOptional === true;
+  const showSugar = drink?.hasSugar !== false;
+  const canSubmit =
+    name.trim().length > 0 &&
+    Boolean(drink) &&
+    (!needsMilk || milkOptional || Boolean(selectedMilk));
+
+  const selectDrink = (category, id) => {
+    const next = drinkById[id];
+    setSelection({ category, id });
+    setSelectedMilk(null);
+    if (next && next.hasSugar === false) setSugars(0);
+    setSubmitError(null);
+  };
 
   const resetForm = () => {
     setName('');
-    setSelectedCoffee(null);
+    setSelection(null);
     setSelectedMilk(null);
     setSugars(0);
     setNotes('');
@@ -40,9 +53,10 @@ export default function OrderPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
-          coffee_type: selectedCoffee,
+          category: selection.category,
+          coffee_type: selection.id,
           milk_type: needsMilk ? selectedMilk : null,
-          sugars,
+          sugars: showSugar ? sugars : 0,
           notes: notes.trim() || null,
         }),
       });
@@ -72,13 +86,13 @@ export default function OrderPage() {
         <header className="pb-2 pt-9">
           <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-700">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            Family coffee bar
+            Family coffee &amp; tea bar
           </p>
           <h1 className="mt-2 text-[28px] font-extrabold leading-tight tracking-tight text-stone-900">
             What are you having?
           </h1>
           <p className="mt-1.5 text-[14px] text-stone-500">
-            Pick your coffee and it goes straight to the machine.
+            Coffee goes to the machine, tea to the tea lady.
           </p>
         </header>
 
@@ -104,12 +118,26 @@ export default function OrderPage() {
               <CoffeeCard
                 key={item.id}
                 coffee={item}
-                isSelected={selectedCoffee === item.id}
-                onClick={() => {
-                  setSelectedCoffee(item.id);
-                  setSelectedMilk(null);
-                  setSubmitError(null);
-                }}
+                isSelected={selection?.category === 'coffee' && selection?.id === item.id}
+                onClick={() => selectDrink('coffee', item.id)}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Tea */}
+        <section className="mt-8 border-t border-stone-900/5 pt-7">
+          <div className="mb-3">
+            <h2 className="field-label mb-1">Tea</h2>
+            <p className="text-[12.5px] text-stone-400">Brewed fresh by the tea lady.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2.5">
+            {teas.map((item) => (
+              <CoffeeCard
+                key={item.id}
+                coffee={item}
+                isSelected={selection?.category === 'tea' && selection?.id === item.id}
+                onClick={() => selectDrink('tea', item.id)}
               />
             ))}
           </div>
@@ -126,18 +154,20 @@ export default function OrderPage() {
                 setSubmitError(null);
               }}
             />
-            {!selectedMilk && (
+            {!selectedMilk && !milkOptional && (
               <p className="mt-2.5 text-[12.5px] font-medium text-amber-600">
-                Pick a milk for your {coffee.name.toLowerCase()} to continue.
+                Pick a milk for your {drink.name.toLowerCase()} to continue.
               </p>
             )}
           </section>
         )}
 
         {/* Sugars */}
-        <section className="mt-7">
-          <SugarCounter value={sugars} onChange={setSugars} />
-        </section>
+        {showSugar && (
+          <section className="mt-7">
+            <SugarCounter value={sugars} onChange={setSugars} />
+          </section>
+        )}
 
         {/* Notes */}
         <section className="mt-7">
@@ -182,7 +212,7 @@ export default function OrderPage() {
         </div>
 
         <p className="mt-6 text-center text-[12px] leading-relaxed text-stone-400">
-          Your order goes straight to the coffee machine queue.
+          Your order lands with the barista or the tea lady, instantly.
         </p>
       </div>
     </div>

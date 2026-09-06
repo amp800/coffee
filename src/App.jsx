@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import OrderPage from './components/OrderPage';
 import BaristaPage from './components/BaristaPage';
 import WaiterPage from './components/WaiterPage';
+import TeaLadyPage from './components/TeaLadyPage';
 
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -38,6 +39,10 @@ function App() {
   // Simple routing
   if (currentPath === '/barista') {
     return <BaristaPage />;
+  }
+
+  if (currentPath === '/tealady') {
+    return <TeaLadyPage />;
   }
 
   if (currentPath === '/waiter') {
