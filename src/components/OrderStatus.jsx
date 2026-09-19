@@ -57,9 +57,9 @@ export default function OrderStatus({ order, onPlaceAnother }) {
 
   return (
     <div className="page animate-fade-up">
-      <div className="mx-auto max-w-md px-5 pt-10">
+      <div className="mx-auto max-w-md px-5 pt-9">
         {/* Big illustration */}
-        <div className="relative mx-auto flex h-44 w-44 items-center justify-center">
+        <div className="relative mx-auto flex h-40 w-40 items-center justify-center">
           <div
             className="absolute inset-0 rounded-full"
             style={{
@@ -72,16 +72,16 @@ export default function OrderStatus({ order, onPlaceAnother }) {
           )}
         </div>
 
-        <div className="mt-4 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-600">
+        <div className="mt-5 text-center">
+          <p className="text-[14px] font-bold uppercase tracking-[0.18em] text-emerald-600">
             Order in
           </p>
-          <h1 className="mt-1.5 text-[26px] font-extrabold tracking-tight text-stone-900">
+          <h1 className="mt-2 text-[34px] font-extrabold tracking-tight text-stone-900">
             Thanks, {liveOrder.name.split(' ')[0]}!
           </h1>
 
           {/* Summary chips */}
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             {drink && <span className="chip">{drink.name}</span>}
             {milk && <span className="chip">{milk.name} milk</span>}
             {drink?.hasSugar !== false && (
@@ -89,12 +89,12 @@ export default function OrderStatus({ order, onPlaceAnother }) {
             )}
           </div>
           {liveOrder.notes && (
-            <p className="mt-2.5 text-[13px] italic text-stone-500">“{liveOrder.notes}”</p>
+            <p className="mt-3 text-[16px] italic text-stone-500">“{liveOrder.notes}”</p>
           )}
         </div>
 
         {/* Live progress */}
-        <div className="mt-7 rounded-3xl bg-white p-5 ring-1 ring-stone-900/5 shadow-[0_1px_3px_rgba(28,25,23,0.06)]">
+        <div className="mt-6 rounded-3xl bg-white p-5 ring-1 ring-stone-900/5 shadow-[0_1px_3px_rgba(28,25,23,0.06)]">
           <div className="relative flex items-start">
             {/* connector line */}
             <div className="absolute left-[18px] right-[18px] top-[10px] h-0.5 -translate-y-1/2 bg-stone-100">
@@ -136,21 +136,24 @@ export default function OrderStatus({ order, onPlaceAnother }) {
             })}
           </div>
 
-          <p className="mt-4 text-center text-[13px] font-medium text-stone-500">
+          <p className="mt-5 text-center text-[16px] font-medium text-stone-500">
             {STEP_COPY[liveOrder.status].note}
           </p>
-          <p className="mt-1 text-center text-[11px] text-stone-300">
+          <p className="mt-2 text-center text-[13px] text-stone-300">
             This page updates on its own.
           </p>
         </div>
 
         {/* Next action */}
-        <button type="button" onClick={onPlaceAnother} className="btn-ghost mx-auto mt-6 flex items-center gap-2">
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          Order another drink
-        </button>
+        <div className="mt-6 text-center">
+          <button
+            type="button"
+            onClick={onPlaceAnother}
+            className="text-[17px] font-medium text-emerald-700 underline underline-offset-4 transition-colors hover:text-emerald-800"
+          >
+            Order another drink
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -11,6 +11,7 @@
     background: #f6f3ee;
     color: #1c1917;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 17px;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
     min-height: 100dvh;
@@ -35,13 +36,13 @@
 
   /* Section label above each form block */
   .field-label {
-    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-400 mb-3;
+    @apply text-[12px] font-semibold uppercase tracking-[0.14em] text-stone-400 mb-3;
   }
 
   /* Big filled action button */
   .btn-primary {
     @apply w-full bg-emerald-600 text-white font-semibold rounded-2xl px-6 py-4
-      text-[17px] shadow-[0_8px_24px_-8px_rgba(5,150,105,0.55)]
+      text-[18px] shadow-[0_8px_24px_-8px_rgba(5,150,105,0.55)]
       transition-all duration-150 ease-out select-none
       hover:bg-emerald-700 active:bg-emerald-800 active:scale-[0.985]
       disabled:opacity-40 disabled:pointer-events-none
@@ -63,10 +64,12 @@
       focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15;
   }
 
-  /* Coffee choice card */
+  /* Coffee choice card — a true square that fills its grid cell.
+     The SVG inside scales with the card (w-3/5) and the name auto-shrinks
+     with clamp(), so nothing ever overflows or overlaps at any width. */
   .coffee-card {
-    @apply relative flex flex-col items-center justify-between gap-2 rounded-[22px]
-      bg-white px-2 pt-3 pb-3 ring-1 ring-stone-900/5
+    @apply relative flex aspect-square w-full flex-col items-center justify-center
+      rounded-[22px] bg-white px-2.5 py-2 ring-1 ring-stone-900/5
       shadow-[0_1px_3px_rgba(28,25,23,0.06)]
       cursor-pointer select-none
       transition-all duration-150 ease-out
@@ -80,10 +83,10 @@
       shadow-[0_10px_24px_-12px_rgba(5,150,105,0.55)];
   }
 
-  /* Milk buttons (square, illustrated) */
+  /* Milk buttons (square, illustrated) — same fluid-square behaviour. */
   .milk-btn {
-    @apply relative flex aspect-square flex-col items-center justify-between
-      rounded-2xl bg-white p-2 pt-2.5 ring-1 ring-stone-900/5
+    @apply relative flex aspect-square w-full flex-col items-center justify-center
+      rounded-2xl bg-white px-2.5 py-2 ring-1 ring-stone-900/5
       shadow-[0_1px_3px_rgba(28,25,23,0.05)]
       cursor-pointer select-none
       transition-all duration-150 ease-out
@@ -91,14 +94,16 @@
       active:translate-y-0 active:scale-[0.98];
   }
 
-  .milk-btn svg {
-    width: 100%;
-    height: auto;
-  }
-
   .milk-btn-selected {
     @apply milk-btn ring-2 ring-emerald-500 bg-white
       shadow-[0_10px_20px_-10px_rgba(5,150,105,0.5)];
+  }
+
+  /* Drink name under the illustration — scales with the viewport so long
+     names ("Lemongrass & Ginger") never spill outside the card. */
+  .tile-name {
+    @apply w-full pt-1 text-center font-semibold leading-tight text-stone-800;
+    font-size: clamp(11px, 2.6vw, 16px);
   }
 
 

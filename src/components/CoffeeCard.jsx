@@ -8,7 +8,7 @@ export default function CoffeeCard({ coffee, isSelected, onClick }) {
     >
       {/* Selected marker */}
       <span
-        className={`absolute top-2.5 right-2.5 grid h-5 w-5 place-items-center rounded-full transition-all duration-150 ${
+        className={`absolute top-2 right-2 grid h-5 w-5 place-items-center rounded-full transition-all duration-150 ${
           isSelected
             ? 'bg-emerald-500 text-white scale-100 opacity-100'
             : 'scale-50 opacity-0'
@@ -19,15 +19,16 @@ export default function CoffeeCard({ coffee, isSelected, onClick }) {
         </svg>
       </span>
 
-      {/* Illustration */}
-      <span className="flex w-full items-end justify-center pt-1">
-        <span className="w-[104px] max-w-full" dangerouslySetInnerHTML={{ __html: coffee.svg }} />
+      {/* Square illustration — scales with the card, capped on desktop */}
+      <span className="flex aspect-square w-3/5 min-w-0 items-center justify-center">
+        <span
+          className="block w-full max-w-[132px]"
+          dangerouslySetInnerHTML={{ __html: coffee.svg }}
+        />
       </span>
 
       {/* Name */}
-      <span className="w-full text-center text-[15px] font-semibold leading-tight text-stone-800">
-        {coffee.name}
-      </span>
+      <span className="tile-name">{coffee.name}</span>
     </button>
   );
 }
