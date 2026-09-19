@@ -89,10 +89,10 @@ export default function MakerPage({
       <section className="mt-6 first:mt-5">
         <div className="mb-2.5 flex items-center gap-2">
           <span className={`h-2 w-2 rounded-full ${dot}`} />
-          <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-stone-400">
+          <h2 className="text-[12px] font-bold uppercase tracking-[0.16em] text-stone-400">
             {title}
           </h2>
-          <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-[11px] font-bold tabular-nums text-stone-500 ring-1 ring-stone-900/5">
+          <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-[12px] font-bold tabular-nums text-stone-500 ring-1 ring-stone-900/5">
             {items.length}
           </span>
         </div>
@@ -120,8 +120,8 @@ export default function MakerPage({
               {icon}
             </div>
             <div>
-              <h1 className="text-[17px] font-extrabold tracking-tight text-stone-900">{title}</h1>
-              <p className="text-[11px] font-medium text-stone-400">
+              <h1 className="text-[18px] font-extrabold tracking-tight text-stone-900">{title}</h1>
+              <p className="text-[12px] font-medium text-stone-400">
                 {orders === null
                   ? 'Connecting…'
                   : activeCount === 0 && empty
@@ -141,6 +141,7 @@ export default function MakerPage({
               <button
                 type="button"
                 onClick={() => setShowClearConfirm(true)}
+                disabled={orders === null}
                 className="btn-ghost text-[13px] font-semibold text-red-500 hover:bg-red-50"
               >
                 Clear all
@@ -171,10 +172,10 @@ export default function MakerPage({
               <div className="mx-auto w-28 opacity-90">
                 <div dangerouslySetInnerHTML={{ __html: emptyArt }} />
               </div>
-              <h2 className="mt-4 text-[19px] font-extrabold tracking-tight text-stone-800">
+              <h2 className="mt-4 text-[20px] font-extrabold tracking-tight text-stone-800">
                 {emptyTitle}
               </h2>
-              <p className="mx-auto mt-1 max-w-[300px] text-[13.5px] leading-relaxed text-stone-500">
+              <p className="mx-auto mt-1 max-w-[300px] text-[14px] leading-relaxed text-stone-500">
                 {emptyBody}
               </p>
               <p className="mx-auto mt-4 w-fit rounded-full bg-white px-4 py-2 text-[13px] font-semibold text-stone-600 ring-1 ring-stone-900/10">
@@ -209,10 +210,10 @@ export default function MakerPage({
                 <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" />
               </svg>
             </div>
-            <h3 className="mt-4 text-center text-[18px] font-extrabold text-stone-900">
-              Clear all {orders.length} orders?
+          <h3 className="mt-4 text-center text-[19px] font-extrabold text-stone-900">
+              Clear all {(orders ?? []).length} orders?
             </h3>
-            <p className="mt-1 text-center text-[13px] leading-relaxed text-stone-500">
+            <p className="mt-1 text-center text-[14px] leading-relaxed text-stone-500">
               Every order disappears from this list. Handy at the end of the session -
               there's no undo.
             </p>

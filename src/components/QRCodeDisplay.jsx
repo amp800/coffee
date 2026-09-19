@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { generateQRDataUrl, getPageUrl } from '../utils/qrcode';
+import { generateQRDataUrl } from '../utils/qrcode';
+
+const ORDER_PAGE_URL = 'https://forcoff.pages.dev/';
 
 function QRImage({ url, size = 200 }) {
   const [dataUrl, setDataUrl] = useState(null);
@@ -28,23 +30,17 @@ function QRImage({ url, size = 200 }) {
   );
 }
 
-/**
- * Share card shown to the barista: scannable QR codes pointing guests to the
- * order page (primary) and the waiter mode (secondary).
- */
 export default function QRCodeDisplay() {
-  const [orderUrl, setOrderUrl] = useState('/');
-  const [waiterUrl, setWaiterUrl] = useState('/waiter');
+  const [dataUrl, setDataUrl] = useState(null);
 
   useEffect(() => {
-    setOrderUrl(getPageUrl('/'));
-    setWaiterUrl(getPageUrl('/waiter'));
+    generateQRDataUrl(ORDER_PAGE_URL, 190).then((result) => {
+      setDataUrl(result);
+    });
   }, []);
 
-  const showHost = orderUrl.startsWith('http');
-
   return (
-    <section className="rounded-3xl bg-white p-5 ring-1 ring-stone-900/5 shadow-[0_1px_3px_rgba(28,25,23,0.06)]">
+    <section className="p-5">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-[15px] font-bold text-stone-900">Point guests here</h3>
@@ -58,43 +54,25 @@ export default function QRCodeDisplay() {
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-4">
-        <QRImage url={orderUrl} size={190} />
+        {dataUrl ? (
+          <img
+            src={dataUrl}
+            alt="QR code for the order page"
+            width={190}
+            height={190}
+            style={{ borderRadius: 6 }}
+          />
+        ) : (
+          <div className="animate-pulse rounded-lg bg-stone-200/60" style={{ width: 190, height: 190 }} />
+        )}
         <div className="min-w-0 flex-1">
           <p className="text-[13px] font-semibold text-stone-700">Guest order page</p>
-          {showHost && (
-            <p className="mt-0.5 break-all text-xs text-stone-400">{orderUrl}</p>
-          )}
+          <p className="mt-0.5 break-all text-xs text-stone-400">{ORDER_PAGE_URL}</p>
           <p className="mt-2 text-xs leading-relaxed text-stone-500">
             Guests scan this to order their own coffee - no app needed, just the camera.
           </p>
         </div>
       </div>
-
-      <details className="group mt-4">
-        <summary className="cursor-pointer list-none text-[13px] font-semibold text-stone-500 transition-colors hover:text-emerald-600">
-          <span className="inline-flex items-center gap-1.5">
-            Waiter mode QR
-            <svg
-              className="h-3.5 w-3.5 transition-transform group-open:rotate-180"
-              viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </span>
-        </summary>
-        <div className="mt-3 flex items-center gap-4 rounded-2xl bg-stone-50 p-3">
-          <QRImage url={waiterUrl} size={108} />
-          <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-semibold text-stone-700">Order-taking mode</p>
-            {showHost && (
-              <p className="mt-0.5 break-all text-[11px] text-stone-400">{waiterUrl}</p>
-            )}
-            <p className="mt-1 text-xs leading-relaxed text-stone-500">
-              For the person walking around collecting orders.
-            </p>
-          </div>
-        </div>
-      </details>
     </section>
   );
 }

@@ -163,28 +163,25 @@ export default function WaiterPage() {
   // ---- order form ------------------------------------------------------------
   return (
     <div className="page">
-      <div className="mx-auto max-w-md px-5">
+      <div className="mx-auto max-w-lg px-5 lg:max-w-4xl xl:max-w-5xl">
         {/* Header */}
         <header className="pb-2 pt-8">
           <div className="flex items-center justify-between">
             <div>
-              <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-700">
+              <p className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.2em] text-emerald-700">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Waiter mode
               </p>
-              <h1 className="mt-2 text-[26px] font-extrabold leading-tight tracking-tight text-stone-900">
+              <h1 className="mt-2 text-[28px] font-extrabold leading-tight tracking-tight text-stone-900">
                 Take an order
               </h1>
             </div>
-            <span className="rounded-full bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-stone-500 ring-1 ring-stone-900/5">
-              quick entry
-            </span>
           </div>
         </header>
 
         {/* Name - first, this is the whole point */}
         <section className="mt-6">
-          <h2 className="field-label">Who is it for?</h2>
+          <h2 className="field-label text-[12px]">Who is it for?</h2>
           <input
             ref={nameRef}
             type="text"
@@ -198,9 +195,9 @@ export default function WaiterPage() {
         </section>
 
         {/* Coffee */}
-        <section className="mt-7">
-          <h2 className="field-label">Coffee</h2>
-          <div className="grid grid-cols-2 gap-2.5">
+        <section className="mt-6">
+          <h2 className="field-label text-[12px]">Coffee</h2>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
             {coffees.map((item) => (
               <CoffeeCard
                 key={item.id}
@@ -213,9 +210,9 @@ export default function WaiterPage() {
         </section>
 
         {/* Tea */}
-        <section className="mt-8 border-t border-stone-900/5 pt-7">
-          <h2 className="field-label mb-3">Tea</h2>
-          <div className="grid grid-cols-2 gap-2.5">
+        <section className="mt-7 border-t border-stone-900/5 pt-6">
+          <h2 className="field-label text-[12px] mb-3">Tea</h2>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
             {teas.map((item) => (
               <CoffeeCard
                 key={item.id}
@@ -229,7 +226,7 @@ export default function WaiterPage() {
 
         {/* Milk */}
         {needsMilk && (
-          <section className="mt-7 animate-fade-up">
+          <section className="mt-6 animate-fade-up">
             <MilkSelector
               milks={milkTypes}
               selected={selectedMilk}
@@ -243,14 +240,14 @@ export default function WaiterPage() {
 
         {/* Sugars + notes in a row-friendly pair */}
         {showSugar && (
-          <section className="mt-7">
+          <section className="mt-6">
             <SugarCounter value={sugars} onChange={setSugars} />
           </section>
         )}
 
-        <section className="mt-7">
+        <section className="mt-6">
           <div className="flex items-baseline justify-between">
-            <h2 className="field-label mb-3">Notes</h2>
+            <h2 className="field-label text-[12px] mb-3">Notes</h2>
             <span className="mb-3 text-xs text-stone-300">optional</span>
           </div>
           <textarea
@@ -286,7 +283,7 @@ export default function WaiterPage() {
           )}
         </div>
 
-        <p className="mt-6 text-center text-[12px] text-stone-400">
+        <p className="mt-5 text-center text-[13px] text-stone-400">
           It resets automatically after each order, ready for the next person.
         </p>
       </div>

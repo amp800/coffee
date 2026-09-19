@@ -21,7 +21,7 @@ export default function SugarCounter({ value, onChange }) {
 
   return (
     <div className="animate-fade-up">
-      <h2 className="field-label">Sugars</h2>
+      <h2 className="field-label text-[12px]">Sugars</h2>
       <div className="flex items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3 ring-1 ring-stone-900/5 shadow-[0_1px_3px_rgba(28,25,23,0.05)]">
         <button
           type="button"

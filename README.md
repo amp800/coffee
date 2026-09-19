@@ -1,4 +1,4 @@
-# ☕ Family Coffee & Tea Bar
+# ☕ Pates Coffee & Tea Bar
 
 A tiny, beautiful coffee-and-tea-ordering app for family gatherings. Guests
 (or one person walking around the table) place orders from their phone, and

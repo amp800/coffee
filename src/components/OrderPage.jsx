@@ -39,6 +39,7 @@ export default function OrderPage() {
     setSugars(0);
     setNotes('');
     setSubmitError(null);
+    setSubmittedOrder(null); // leave the confirmation screen
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -81,24 +82,24 @@ export default function OrderPage() {
 
   return (
     <div className="page">
-      <div className="mx-auto max-w-md px-5">
+      <div className="mx-auto max-w-lg px-5 lg:max-w-4xl xl:max-w-5xl">
         {/* Hero */}
-        <header className="pb-2 pt-9">
-          <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-700">
+        <header className="pb-2 pt-8">
+          <p className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.2em] text-emerald-700">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            Family coffee &amp; tea bar
+            Pates coffee &amp; tea bar
           </p>
-          <h1 className="mt-2 text-[28px] font-extrabold leading-tight tracking-tight text-stone-900">
+          <h1 className="mt-2 text-[30px] font-extrabold leading-tight tracking-tight text-stone-900">
             What are you having?
           </h1>
-          <p className="mt-1.5 text-[14px] text-stone-500">
+          <p className="mt-1.5 text-[15px] text-stone-500">
             Coffee goes to the machine, tea to the tea lady.
           </p>
         </header>
 
         {/* Name */}
         <section className="mt-7">
-          <h2 className="field-label">Your name</h2>
+          <h2 className="field-label text-[12px]">Your name</h2>
           <input
             type="text"
             value={name}
@@ -112,8 +113,8 @@ export default function OrderPage() {
 
         {/* Coffee */}
         <section className="mt-7">
-          <h2 className="field-label">Coffee</h2>
-          <div className="grid grid-cols-2 gap-2.5">
+          <h2 className="field-label text-[12px]">Coffee</h2>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
             {coffees.map((item) => (
               <CoffeeCard
                 key={item.id}
@@ -127,11 +128,8 @@ export default function OrderPage() {
 
         {/* Tea */}
         <section className="mt-8 border-t border-stone-900/5 pt-7">
-          <div className="mb-3">
-            <h2 className="field-label mb-1">Tea</h2>
-            <p className="text-[12.5px] text-stone-400">Brewed fresh by the tea lady.</p>
-          </div>
-          <div className="grid grid-cols-2 gap-2.5">
+          <h2 className="field-label text-[12px] mb-3">Tea</h2>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
             {teas.map((item) => (
               <CoffeeCard
                 key={item.id}
@@ -145,7 +143,7 @@ export default function OrderPage() {
 
         {/* Milk */}
         {needsMilk && (
-          <section className="mt-7">
+          <section className="mt-6">
             <MilkSelector
               milks={milkTypes}
               selected={selectedMilk}
@@ -155,7 +153,7 @@ export default function OrderPage() {
               }}
             />
             {!selectedMilk && !milkOptional && (
-              <p className="mt-2.5 text-[12.5px] font-medium text-amber-600">
+              <p className="mt-2.5 text-[13px] font-medium text-amber-600">
                 Pick a milk for your {drink.name.toLowerCase()} to continue.
               </p>
             )}
@@ -164,15 +162,15 @@ export default function OrderPage() {
 
         {/* Sugars */}
         {showSugar && (
-          <section className="mt-7">
+          <section className="mt-6">
             <SugarCounter value={sugars} onChange={setSugars} />
           </section>
         )}
 
         {/* Notes */}
-        <section className="mt-7">
+        <section className="mt-6">
           <div className="flex items-baseline justify-between">
-            <h2 className="field-label mb-3">Anything else?</h2>
+            <h2 className="field-label text-[12px] mb-3">Anything else?</h2>
             <span className="mb-3 text-xs text-stone-300">optional</span>
           </div>
           <textarea
@@ -186,12 +184,12 @@ export default function OrderPage() {
         </section>
 
         {/* Submit */}
-        <div className="mt-8">
+        <div className="mt-7">
           <button
             type="button"
             onClick={handleSubmit}
             disabled={!canSubmit || isSubmitting}
-            className="btn-primary"
+            className="btn-primary text-[18px] py-5"
           >
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2.5">
@@ -211,7 +209,7 @@ export default function OrderPage() {
           )}
         </div>
 
-        <p className="mt-6 text-center text-[12px] leading-relaxed text-stone-400">
+        <p className="mt-6 text-center text-[13px] leading-relaxed text-stone-400">
           Your order lands with the barista or the tea lady, instantly.
         </p>
       </div>
