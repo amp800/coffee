@@ -25,9 +25,19 @@ export default function OrderCard({ order, onStatusChange, index }) {
         done ? 'opacity-60' : ''
       }`}
     >
-      {/* Top: customer info + status */}
-      <div className="flex items-start justify-between gap-3 p-4 pb-3">
-        {/* Left: customer info */}
+      {/* Main row: drink tile beside the order text, status on the right */}
+      <div className="flex items-start gap-4 p-4">
+        {/* Drink tile with its name inside — same style as the ordering page */}
+        {drink && (
+          <div className="flex h-24 w-24 flex-shrink-0 flex-col items-center justify-center gap-0.5 rounded-2xl bg-stone-50 p-1.5 ring-1 ring-stone-900/5">
+            <div className="w-[68px]" dangerouslySetInnerHTML={{ __html: drink.svg }} />
+            <span className="w-full truncate text-center text-[13px] font-semibold leading-tight text-stone-800">
+              {drink.name}
+            </span>
+          </div>
+        )}
+
+        {/* Order text */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h3 className="min-w-0 truncate text-[26px] font-bold leading-tight text-stone-900">
@@ -46,26 +56,12 @@ export default function OrderCard({ order, onStatusChange, index }) {
           )}
         </div>
 
-        {/* Right: status + time */}
+        {/* Status + time */}
         <div className="flex flex-shrink-0 flex-col items-end gap-2">
           <span className={`${PILL[order.status]} text-[14px]`}>{order.status}</span>
           <span className="text-[14px] tabular-nums text-stone-400">
             {formatTime(order.created_at)}
           </span>
-        </div>
-      </div>
-
-      {/* Middle: drink tile with its name inside — same style as the ordering page */}
-      <div className="flex justify-center px-4 pb-3">
-        <div className="flex h-32 w-32 flex-col items-center justify-center gap-1 rounded-2xl bg-stone-50 p-2 ring-1 ring-stone-900/5">
-          {drink && (
-            <div className="w-[92px]" dangerouslySetInnerHTML={{ __html: drink.svg }} />
-          )}
-          {drink && (
-            <span className="w-full truncate text-center text-[15px] font-semibold leading-tight text-stone-800">
-              {drink.name}
-            </span>
-          )}
         </div>
       </div>
 
