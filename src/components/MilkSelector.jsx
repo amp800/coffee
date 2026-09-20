@@ -1,10 +1,7 @@
 export default function MilkSelector({ milks, selected, onSelect }) {
   return (
     <div className="animate-fade-up">
-      <div className="flex items-baseline justify-between">
-        <h2 className="field-label mb-3">Milk</h2>
-        <span className="mb-3 text-xs text-stone-400">only if you'd like</span>
-      </div>
+      <h2 className="field-label mb-3">Milk</h2>
       <div className="grid grid-cols-3 gap-2.5">
         {milks.map((milk) => {
           const isSelected = selected === milk.id;
