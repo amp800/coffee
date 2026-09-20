@@ -9,5 +9,5 @@ pages_build_output_dir = "./dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "coffee-orders"
-database_id = "PASTE_YOUR_DATABASE_ID_HERE"
+database_id = "dbf2aeee-bae0-4980-b4b5-9d92e414903b"
 migrations_dir = "migrations"
